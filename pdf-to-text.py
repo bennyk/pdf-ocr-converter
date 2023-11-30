@@ -13,12 +13,12 @@ def text_extractor(path):
         print("Writing to", outfile)
         with open(path, mode='rb') as f:
             reader = PyPDF2.PdfReader(f)
-            # num_pages = reader.getNumPages()
+            # page = reader.pages[25]
+            # visit_text(page, out)
+            # return 1
             num_pages = len(reader.pages)
             for i in range(num_pages):
                 page = reader.pages[i]
-                # data.append(page.extract_text())
-                # print(page.extract_text())
                 visit_text(page, out)
                 if i >= max_pages:
                     print("Exiting")
@@ -41,7 +41,7 @@ def visit_text(page, out: typing.IO):
         # print(text, end='')
 
         y = tm[5]
-        if 54 < y < 585:
+        if 0 < y < 585:
             if prepend is not None:
                 parts.append(prepend)
             parts.append(text)
@@ -50,7 +50,32 @@ def visit_text(page, out: typing.IO):
     text_body = "".join(parts)
 
     # print(text_body)
-    out.write(text_body.encode('utf-8'))
+    body = ''
+    flag = False
+    suppress = True
+    for i, x in enumerate(text_body.split('\n')):
+        m = re.search(r'(.+?)(#+)$', x)
+        if m is not None:
+            body += '{}\n{} '.format(m.group(1), m.group(2))
+            if not suppress:
+                print("{}\n\n{} ".format(m.group(1), m.group(2)), end='')
+            flag = True
+        else:
+            if flag:
+                flag = False
+                s = re.sub(r'#+', '', x)
+                s = re.sub(r'\s+', ' ', s)
+                body += s
+                body += '\n'
+                if not suppress:
+                    print(s, '\n')
+            else:
+                body += x
+                if not suppress:
+                    print(x)
+
+    # TODO self-reinforcing was converted to "seltreinfbrcing" hmmm...
+    out.write(body.encode('utf-8'))
 
 
 if __name__ == "__main__":
@@ -65,3 +90,9 @@ if __name__ == "__main__":
 #         1 file(s) moved.
 # (venv) C:\Users\benny\PyCharmProjects\ocr-python> python mark2epub-master\mark2epub.py md\ out.epub
 # eBook creation complete
+
+# TODO need to build ebook
+# TODO Fixing the bold font.
+# TODO Ability to join the sentence ending with hyphen '-'
+# TODO Convert end of the file to continuous reading in EPUB
+
