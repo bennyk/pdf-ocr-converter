@@ -1,4 +1,5 @@
 import re
+import sys
 import typing
 
 import PyPDF2
@@ -7,6 +8,7 @@ import PyPDF2
 
 
 def text_extractor(path):
+    print("stdout encoding", sys.stdout.encoding)
     max_pages = 50
     outfile = "./output.md"
     with open(outfile, mode='wb') as out:
@@ -70,12 +72,16 @@ def visit_text(page, out: typing.IO):
                 if not suppress:
                     print(s, '\n')
             else:
-                body += x
+                body += x + '\n'
                 if not suppress:
                     print(x)
 
-    # TODO self-reinforcing was converted to "seltreinfbrcing" hmmm...
-    out.write(body.encode('utf-8'))
+    # Alternative 'utf-8', and Windows 'cp1252'
+    try:
+        out.write(body.encode('ansi'))
+    except UnicodeEncodeError:
+        print("Encoding error")
+        out.write(body.encode('utf-8'))
 
 
 if __name__ == "__main__":
