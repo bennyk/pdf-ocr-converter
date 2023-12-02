@@ -56,32 +56,36 @@ def visit_text(page, out: typing.IO):
     flag = False
     suppress = True
     for i, x in enumerate(text_body.split('\n')):
-        m = re.search(r'(.+?)(#+)$', x)
+        m = re.search(r'(#+)(.+?)$', x)
         if m is not None:
-            body += '{}\n{} '.format(m.group(1), m.group(2))
+            s = re.sub(r'#+', '', m.group(2))
+            body += '{}{}\n'.format(m.group(1), s)
             if not suppress:
-                print("{}\n\n{} ".format(m.group(1), m.group(2)), end='')
-            flag = True
+                print("{}{}".format(m.group(1), s))
         else:
-            if flag:
-                flag = False
-                s = re.sub(r'#+', '', x)
-                s = re.sub(r'\s+', ' ', s)
-                body += s
-                body += '\n'
+            m = re.search(r'(.+?)(#+)$', x)
+            if m is not None:
+                body += '{}\n{} '.format(m.group(1), m.group(2))
                 if not suppress:
-                    print(s, '\n')
+                    print("{}\n{} ".format(m.group(1), m.group(2)), end='')
+                flag = True
             else:
-                body += x + '\n'
-                if not suppress:
-                    print(x)
+                if flag:
+                    flag = False
+                    s = re.sub(r'#+', '', x)
+                    s = re.sub(r'\s+', ' ', s)
+                    body += s
+                    body += '\n'
+                    if not suppress:
+                        print(s, '\n')
+                else:
+                    body += x + '\n'
+                    if not suppress:
+                        print(x)
 
-    # Alternative 'utf-8', and Windows 'cp1252'
-    try:
-        out.write(body.encode('ansi'))
-    except UnicodeEncodeError:
-        print("Encoding error")
-        out.write(body.encode('utf-8'))
+    # Alternative 'utf-8', and Windows 'cp1252' or 'ansi'
+    # https://www.ibm.com/docs/en/cognos-analytics/11.0.0?topic=performance-pdf-file-settings
+    out.write(body.encode('utf-8'))
 
 
 if __name__ == "__main__":
@@ -97,8 +101,9 @@ if __name__ == "__main__":
 # (venv) C:\Users\benny\PyCharmProjects\ocr-python> python mark2epub-master\mark2epub.py md\ out.epub
 # eBook creation complete
 
-# TODO need to build ebook
+# TODO Join pagination
+# TODO Need to build ebook e.g. Makefile
 # TODO Fixing the bold font.
-# TODO Ability to join the sentence ending with hyphen '-'
-# TODO Convert end of the file to continuous reading in EPUB
-
+# TODO Incomplete sentence: " spirit of that evening was well characterized when one" cut
+# TODO Need to join 0xad or hyphen '-' in ANSI mode (non-printable) to join two partial word
+# TODO Missing character "*s*o" e.g. "waves ― o it is with the human uncertainty"
