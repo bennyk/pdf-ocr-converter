@@ -11,11 +11,13 @@ import PyPDF2
 out = None
 chapters = []
 markdown_dir = "markdown_dir"
+dup_int = 1
 
 
 def text_extractor(path):
     print("stdout encoding", sys.stdout.encoding)
-    max_pages = 50
+    max_pages = 1000
+
     with open(path, mode='rb') as f:
         reader = PyPDF2.PdfReader(f)
         # page = reader.pages[25]
@@ -29,11 +31,13 @@ def text_extractor(path):
                 print("Exiting")
                 return i
 
+    print("Completed")
+    return i
+
 
 def visit_text(page):
-    global out, markdown_dir
+    global out, markdown_dir, dup_int
     parts = []
-    dup_int = 1
 
     def visitor_body(text, cm, tm, fontDict, fontSize):
         # TODO unicode translation error
@@ -62,7 +66,7 @@ def visit_text(page):
     m = re.match(r'###(.+)$', text_para[0].lower())
     if m is not None:
         s = re.sub(r'#+', '', m.group(1))
-        s = re.sub(r'\*', '', s)
+        s = re.sub(r'[^A-Za-z ]+', '', s)
         s = re.sub(r'\s+', '_', s)
         if s != '':
             if s in chapters:
